@@ -15,5 +15,5 @@ def analyze(product: str):
     return {
         "product": product,
         "num_reviews": len(reviews),
-        "insights": insights
+        **insights
     }

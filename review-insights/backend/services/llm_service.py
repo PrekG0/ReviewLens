@@ -1,5 +1,6 @@
 from google import genai
 import os
+import json
 
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
@@ -10,19 +11,20 @@ You are an AI that analyzes product reviews.
 Reviews:
 {reviews}
 
-Return STRICTLY in this format:
+Return ONLY valid JSON in this format:
 
-Top Complaints:
-- ...
+{{
+  "complaints": ["..."],
+  "praises": ["..."],
+  "insights": ["..."],
+  "improvements": ["..."]
+}}
 
-Top Praises:
-- ...
-
-Key Insights:
-- ...
-
-Suggested Improvements:
-- ...
+Rules:
+- Only JSON
+- No explanation
+- No markdown
+- Keep points short
 """
 
     try:
@@ -31,7 +33,15 @@ Suggested Improvements:
             contents=prompt,
         )
 
-        return response.text
+        raw_text = response.text.strip()
+
+        # 🔥 Handle markdown issues (VERY IMPORTANT)
+        if raw_text.startswith("```"):
+            raw_text = raw_text.split("```")[1]
+
+        parsed = json.loads(raw_text)
+
+        return parsed
 
     except Exception as e:
-        return f"Error: {str(e)}"
+        return {"error": str(e)}
